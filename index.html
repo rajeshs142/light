@@ -1,0 +1,992 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CBSE Class 10 Light</title>
+    <style>
+        :root {
+            --primary: #2980b9;
+            --secondary: #2c3e50;
+            --bg: #f4f6f9;
+            --panel-bg: #ffffff;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: var(--bg);
+            margin: 0;
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+            overflow: hidden;
+        }
+
+        header {
+            background-color: #6001d2;
+            color: white;
+            padding: 10px;
+            text-align: center;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+            flex-shrink: 0;
+            font-weight: 600;
+        }
+
+        /* --- Main Layout --- */
+        .main-container {
+            display: flex;
+            flex: 1;
+            overflow: hidden;
+        }
+
+        /* --- LEFT PANEL --- */
+        .left-panel {
+            width: 400px;
+            background: var(--panel-bg);
+            border-right: 1px solid #ddd;
+            display: flex;
+            flex-direction: column;
+            padding: 0 15px;
+            overflow-y: auto;
+            box-shadow: 2px 0 5px rgba(0,0,0,0.05);
+            z-index: 10;
+        }
+
+        .section-header {
+            font-size: 0.85rem; text-transform: uppercase; color: #312e2e;
+            border-bottom: 2px solid #eee; margin: 15px 0 8px 0; padding-bottom: 5px; font-weight: bold;
+        }
+
+        .info-box {
+            background: #fff8e1;
+            border: 1px solid #ffe082;
+            padding: 8px;
+            border-radius: 4px;
+            font-size: 0.8rem;
+            color: #444;
+            margin-bottom: 5px;
+            line-height: 1.4;
+        }
+        .info-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 4px; }
+        .formula-item { font-family: 'Courier New', monospace; font-weight: bold; color: var(--secondary); }
+
+        .control-group { margin-bottom: 12px; }
+        label { font-weight: 600; font-size: 0.85rem; color: var(--secondary); display: block; margin-bottom: 4px; }
+        select, input[type="range"] { width: 100%; cursor: pointer; }
+
+        /* Tables */
+        .ref-table-container { border: 1px solid #eee; border-radius: 4px; overflow: hidden; margin-bottom: 5px; }
+        .ref-table { width: 100%; border-collapse: collapse; font-size: 0.75rem; display: none; }
+        .ref-table th { color: white; padding: 6px; text-align: left; }
+        .ref-table td { border-bottom: 1px solid #eee; padding: 6px; cursor: pointer; vertical-align: top; }
+        .ref-table tr:hover td { background-color: #f0f8ff; color: var(--primary); font-weight: bold; }
+        .active-table { display: table; }
+
+        .theme-concave-mirror th { background-color: #8d6e63; }
+        .theme-convex-mirror th { background-color: #27ae60; }
+        .theme-convex-lens th { background-color: #27ae60; }
+        .theme-concave-lens th { background-color: var(--primary); }
+
+        /* --- RIGHT AREA --- */
+        .right-area {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            position: relative;
+            background: white;
+        }
+
+        .canvas-container {
+            flex: 1;
+            position: relative;
+            overflow: hidden;
+            cursor: crosshair;
+        }
+        canvas { display: block; width: 100%; height: 100%; }
+
+        .legend-overlay {
+            position: absolute; top: 10px; right: 10px;
+            background: rgba(255,255,255,0.9); padding: 8px; border-radius: 4px;
+            border: 1px solid #ccc; font-size: 0.75rem; pointer-events: none;
+        }
+        .legend-item { display: flex; align-items: center; margin-bottom: 4px; }
+        .line-icon { width: 25px; height: 3px; margin-right: 6px; border-radius: 2px; }
+
+        /* --- BOTTOM DASHBOARD --- */
+        .bottom-dashboard {
+            height: 350px;
+            background: #fdfdfd;
+            border-top: 1px solid #ccc;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .dashboard-header {
+            background: #ecf0f1;
+            padding: 5px 15px;
+            border-bottom: 1px solid #ddd;
+            display: flex;
+            gap: 15px;
+            align-items: center;
+            font-size: 0.8rem;
+            color: var(--secondary);
+        }
+        .dashboard-header label { display: flex; align-items: center; gap: 5px; margin: 0; cursor: pointer; font-weight: normal;}
+        
+        .zoom-control { display: flex; align-items: center; gap: 8px; margin-left: auto; }
+        .zoom-control input { width: 80px; }
+
+        .dashboard-content {
+            flex: 1;
+            display: flex;
+            overflow: hidden;
+        }
+
+        /* Calculation Pane */
+        .calc-pane {
+            flex: 0 0 50%;
+            padding: 15px;
+            border-right: 1px solid #eee;
+            overflow-y: auto;
+            font-family: 'Segoe UI', sans-serif;
+            font-size: 0.95rem;
+            color: #333;
+            line-height: 1.5;
+        }
+        .calc-title { font-weight: bold; color: var(--primary); margin-bottom: 10px; border-bottom: 1px solid #eee; padding-bottom: 5px; font-size: 1rem;}
+        
+        .calc-step { margin-bottom: 15px; }
+        .calc-label { font-weight: bold; color: #555; display: block; margin-bottom: 2px; }
+        .calc-math { font-family: 'Times New Roman', serif; font-size: 1.1rem; color: #222; padding-left: 10px; }
+        .calc-result-final { background: #e8f5e9; padding: 8px; border-radius: 4px; border-left: 4px solid #43a047; margin-top: 5px; }
+
+        /* Problems Pane */
+        .problems-pane {
+            flex: 1;
+            padding: 0;
+            overflow-y: auto;
+            background: white;
+        }
+        .problem-list { list-style: none; padding: 0; margin: 0; }
+        .problem-item {
+            padding: 10px 15px;
+            border-bottom: 1px solid #f0f0f0;
+            cursor: pointer;
+            font-size: 0.85rem;
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+        .problem-item:hover { background: #f9f9f9; }
+        .problem-item.active { background: #e3f2fd; border-left: 4px solid var(--primary); }
+        .prob-title { font-weight: bold; color: #2c3e50; font-size: 0.9rem; }
+        .prob-desc { color: #555; font-size: 0.8rem; line-height: 1.3; }
+
+    </style>
+</head>
+<body>
+
+
+<div class="main-container">
+    
+    <!-- LEFT PANEL -->
+    <div class="left-panel">
+        
+<header>
+    CBSE Class 10 Light
+</header>
+        <div class="section-header" style="margin-top:10px">Variables</div>
+        <div class="info-box info-grid">
+
+            <span><b>u</b>: Object Distance</span>
+            <span><b>v</b>: Image Distance</span>
+            <span><b>f</b>: focal length</span>
+            <span><b>m</b>: Magnification</span>
+            <span><b>P</b>: Power</span>
+            
+            
+            
+                        <span><b>P/O</b>: Pole / Optic Center</span>
+            <span><b>F/F1/F2</b>: Principal Focus</span>
+            <span><b>R</b>: Radius (2f)</span>
+
+            <span><b>C/2F/2F1/2F2</b>: Center of Curvature</span>
+        </div>
+
+        <div class="section-header">Formulas</div>
+        <div class="info-box">
+            <div class="formula-item">Mirror: 1/v + 1/u = 1/f</div>
+            <div class="formula-item">Lens:&nbsp;&nbsp; 1/v - 1/u = 1/f</div>
+            <div class="formula-item">Mag (m): -v/u (Mir), v/u (Len)</div>
+                        <div class="formula-item">Power (P): 1/f</div>
+
+        </div>
+
+        <div class="section-header">Controls</div>
+        <div class="control-group">
+            <label>Optical Element</label>
+            <select id="opticType">
+                <option value="concave_mirror">Concave Mirror</option>
+                <option value="convex_mirror">Convex Mirror</option>
+                <option value="convex_lens" selected>Convex Lens</option>
+                <option value="concave_lens">Concave Lens</option>
+            </select>
+        </div>
+
+        <div class="control-group">
+            <label>Object Distance (u): <span id="txt-u"></span> cm</label>
+            <input type="range" id="inp-u" min="5" max="600" step="0.1" value="200">
+        </div>
+        
+        <div class="control-group">
+            <label>Focal Length (f): <span id="txt-f"></span> cm</label>
+            <input type="range" id="inp-f" min="5" max="200" step="0.1" value="100">
+        </div>
+        
+        <div class="control-group">
+            <label>Object Height (h): <span id="txt-h"></span> cm</label>
+            <input type="range" id="inp-h" min="2" max="100" step="1" value="40">
+        </div>
+
+        <div class="section-header">Reference Table</div>
+        <div class="ref-table-container">
+            <table id="tbl-concave-mirror" class="ref-table theme-concave-mirror">
+                <thead><tr><th>Position of Object</th><th>Position of Image</th><th>Size & Nature</th></tr></thead>
+                <tbody>
+                    <tr onclick="setPreset('Infinity', 100, 40, 2)"><td>At Infinity</td><td>At Focus F</td><td>Point-sized, Real, Inverted</td></tr>
+                    <tr onclick="setPreset(250, 100, 40, 2)"><td>Beyond C</td><td>Between F and C</td><td>Diminished, Real, Inverted</td></tr>
+                    <tr onclick="setPreset(200, 100, 40, 2)"><td>At C</td><td>At C</td><td>Same size, Real, Inverted</td></tr>
+                    <tr onclick="setPreset(150, 100, 40, 2)"><td>Between C and F</td><td>Beyond C</td><td>Enlarged, Real, Inverted</td></tr>
+                    <tr onclick="setPreset(100, 100, 40, 2)"><td>At Focus F</td><td>At Infinity</td><td>Enlarged, Real, Inverted</td></tr>
+                    <tr onclick="setPreset(60, 100, 40, 2)"><td>Between P and F</td><td>Behind Mirror</td><td>Enlarged, Virtual, Erect</td></tr>
+                </tbody>
+            </table>
+
+            <table id="tbl-convex-mirror" class="ref-table theme-convex-mirror">
+                <thead><tr><th>Position of Object</th><th>Position of Image</th><th>Size & Nature</th></tr></thead>
+                <tbody>
+                    <tr onclick="setPreset('Infinity', 100, 40, 2)"><td>At Infinity</td><td>At Focus F (Behind)</td><td>Point-sized, Virtual, Erect</td></tr>
+                    <tr onclick="setPreset(200, 100, 40, 2)"><td>Between Infinity and P</td><td>Between P and F</td><td>Diminished, Virtual, Erect</td></tr>
+                </tbody>
+            </table>
+
+            <table id="tbl-convex-lens" class="ref-table theme-convex-lens">
+                <thead><tr><th>Position of Object</th><th>Position of Image</th><th>Size & Nature</th></tr></thead>
+                <tbody>
+                    <tr onclick="setPreset('Infinity', 100, 40, 2)"><td>At Infinity</td><td>At Focus F2</td><td>Point-sized, Real, Inverted</td></tr>
+                    <tr onclick="setPreset(250, 100, 40, 2)"><td>Beyond 2F1</td><td>Between F2 and 2F2</td><td>Diminished, Real, Inverted</td></tr>
+                    <tr onclick="setPreset(200, 100, 40, 2)"><td>At 2F1</td><td>At 2F2</td><td>Same size, Real, Inverted</td></tr>
+                    <tr onclick="setPreset(150, 100, 40, 2)"><td>Between F1 and 2F1</td><td>Beyond 2F2</td><td>Enlarged, Real, Inverted</td></tr>
+                    <tr onclick="setPreset(100, 100, 40, 2)"><td>At Focus F1</td><td>At Infinity</td><td>Enlarged, Real, Inverted</td></tr>
+                    <tr onclick="setPreset(60, 100, 40, 2)"><td>Between F1 and O</td><td>Same side</td><td>Enlarged, Virtual, Erect</td></tr>
+                </tbody>
+            </table>
+
+            <table id="tbl-concave-lens" class="ref-table theme-concave-lens">
+                <thead><tr><th>Position of Object</th><th>Position of Image</th><th>Size & Nature</th></tr></thead>
+                <tbody>
+                    <tr onclick="setPreset('Infinity', 100, 40, 2)"><td>At Infinity</td><td>At Focus F1</td><td>Point-sized, Virtual, Erect</td></tr>
+                    <tr onclick="setPreset(200, 100, 40, 2)"><td>Between Infinity and O</td><td>Between F1 and O</td><td>Diminished, Virtual, Erect</td></tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- RIGHT AREA -->
+    <div class="right-area">
+        <div class="canvas-container">
+            <canvas id="mainCanvas"></canvas>
+            <div class="legend-overlay">
+                <div class="legend-item"><div class="line-icon" style="background:#e67e22"></div> Incident</div>
+                <div class="legend-item"><div class="line-icon" style="background:#9b59b6"></div> Reflected</div>
+                <div class="legend-item"><div class="line-icon" style="background:#95a5a6; border-bottom: 2px dashed #95a5a6; background:none; height:0;"></div> Virtual</div>
+            </div>
+        </div>
+
+        <!-- BOTTOM DASHBOARD -->
+        <div class="bottom-dashboard">
+            <div class="dashboard-header">
+                <strong>Settings:</strong>
+                <label><input type="checkbox" id="checkGrid" checked> Show Grid</label>
+                <label><input type="checkbox" id="checkDims" checked> Show Dimensions</label>
+                <div class="zoom-control">
+                    <span>Zoom:</span>
+                    <input type="range" id="zoomSlider" min="0.5" max="10.0" step="0.1" value="2.0">
+                </div>
+            </div>
+
+            <div class="dashboard-content">
+                <div class="problems-pane">
+                    <ul class="problem-list" id="problemList"></ul>
+                </div>
+                <div class="calc-pane">
+                    <div class="calc-title" id="calc-title">Detailed Solution</div>
+                    <div id="calc-content"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    const PROBLEMS = [
+        { 
+            id: "Example 9.1", 
+            type: "convex_mirror", u: 500, f: 150, h: null, scale: 0.8, h_temp:100,
+            title: "A convex mirror used for rear-view on an automobile has a radius of curvature of 3.00 m. If a bus is located at 5.00 m from this mirror, find the position, nature and size of the image.", 
+            desc: "R=3.0m (f=1.5m), Bus at 5.0m",
+            solveFor: 'v'
+        },
+        { 
+            id: "Example 9.2", 
+            type: "concave_mirror", u: 25, f: 15, h: 4, scale: 9,
+            title: "An object, 4.0 cm in size, is placed at 25.0 cm in front of a concave mirror of focal length 15.0 cm. At what distance from the mirror should a screen be placed in order to obtain a sharp image? Find the nature and the size of the image.", 
+            desc: "Object at 25cm, f=15cm",
+            solveFor: 'v'
+        },
+        { 
+            id: "Intext Q", 
+            type: "concave_mirror", u: 10, f: 7.5, h: null, scale: 10.0, h_temp: 7.0,
+            title: "A concave mirror produces three times magnified (enlarged) real image of an object placed at 10 cm in front of it. Where is the image located?", 
+            desc: "3x magnified, u=10cm",
+            solveFor: 'v'
+        },
+        { 
+            id: "Example 9.3", 
+            type: "concave_lens", u: 30, f: 15, h: null, scale: 10.0, h_temp: 6.0,
+            title: "A concave lens has focal length of 15 cm. At what distance should the object from the lens be placed so that it forms an image at 10 cm from the lens? Also, find the magnification produced by the lens.", 
+            desc: "f=15cm, Image at 10cm",
+            solveFor: 'u'
+        },
+        { 
+            id: "Example 9.4", 
+            type: "convex_lens", u: 15, f: 10, h: 2, scale: 10.0,
+            title: "A 2.0 cm tall object is placed perpendicular to the principal axis of a convex lens of focal length 10 cm. The distance of the object from the lens is 15 cm. Find the nature, position and size of the image. Also find its magnification.", 
+            desc: "Object at 15cm, f=10cm",
+            solveFor: 'v'
+        },
+        { 
+            id: "Intext Q", 
+            type: "convex_lens", u: 50, f: 25, h: null, scale: 4.0, h_temp: 20.0,
+            title: "A convex lens forms a real and inverted image of a needle at a distance of 50 cm from it. Where is the needle placed in front of the convex lens if the image is equal to the size of the object? Also, find the power of the lens.", 
+            desc: "Real inverted equal size at 50cm",
+            solveFor: 'u'
+        },
+        { 
+            id: "Q7", 
+            type: "concave_mirror", u: 10, f: 15, h: null, scale: 6.0, h_temp: 10.0,
+            title: "We wish to obtain an erect image of an object, using a concave mirror of focal length 15 cm. What should be the range of distance of the object from the mirror? What is the nature of the image? Is the image larger or smaller than the object? Draw a ray diagram to show the image formation in this case.", 
+            desc: "Object inside f=15cm",
+            solveFor: 'v'
+        },
+        { 
+            id: "Q10", 
+            type: "convex_lens", u: 25, f: 10, h: 5, scale: 10,
+            title: "An object 5 cm in length is held 25 cm away from a converging lens of focal length 10 cm. Draw the ray diagram and find the position, size and the nature of the image formed.", 
+            desc: "5cm tall obj at 25cm, f=10cm",
+            solveFor: 'v'
+        },
+        { 
+            id: "Q11", 
+            type: "concave_lens", u: 30, f: 15, h: null, scale: 7.0, h_temp: 10.0,
+            title: "A concave lens of focal length 15 cm forms an image 10 cm from the lens. How far is the object placed from the lens? Draw the ray diagram.", 
+            desc: "f=15cm, Image at 10cm",
+            solveFor: 'u'
+        },
+        { 
+            id: "Q12", 
+            type: "convex_mirror", u: 10, f: 15, h: null, scale: 8.0, h_temp: 10.0,
+            title: "An object is placed at a distance of 10 cm from a convex mirror of focal length 15 cm. Find the position and nature of the image.", 
+            desc: "Object at 10cm, f=15cm",
+            solveFor: 'v'
+        },
+        { 
+            id: "Q14", 
+            type: "convex_mirror", u: 20, f: 15, h: 5, scale: 10,
+            title: "An object 5.0 cm in length is placed at a distance of 20 cm in front of a convex mirror of radius of curvature 30 cm. Find the position of the image, its nature and size.", 
+            desc: "Obj at 20cm, R=30cm",
+            solveFor: 'v'
+        },
+        { 
+            id: "Q15", 
+            type: "concave_mirror", u: 27, f: 18, h: 7, scale: 8.0,
+            title: "An object of size 7.0 cm is placed at 27 cm in front of a concave mirror of focal length 18 cm. At what distance from the mirror should a screen be placed, so that a sharp focussed image can be obtained? Find the size and the nature of the image", 
+            desc: "Obj at 27cm, f=18cm",
+            solveFor: 'v'
+        },
+    ];
+
+    const canvas = document.getElementById('mainCanvas');
+    const ctx = canvas.getContext('2d');
+
+    const COL_AXIS = "#7f8c8d";
+    const COL_OBJ = "#2980b9";
+    const COL_IMG = "#c0392b";
+    const COL_INCIDENT = "#e67e22"; 
+    const COL_REFLECTED = "#9b59b6"; 
+    const COL_VIRTUAL = "#95a5a6";   
+    const COL_TEXT = "#34495e";
+    const COL_DIM = "#555";
+    const COL_GRID = "rgba(0,0,0,0.06)";
+
+    let state = {
+        type: 'convex_lens',
+        u: -100,    
+        f: 100,     
+        h: 40,
+        h_defined: true, // New flag: is height relevant?
+        isInfinity: false,
+        scale: 2.0, 
+        lastV: null,
+        solveTarget: 'v'
+    };
+    let settings = { grid: true, dims: true };
+    let interaction = { draggingObj: false, draggingHead: false, draggingImg: false, draggingFocus: false };
+
+    function getSignedF() {
+        const val = Math.abs(state.f);
+        if (state.type === 'concave_mirror' || state.type === 'concave_lens') return -val;
+        return val;
+    }
+
+    function calculateV(u, f) {
+        if (Math.abs(u) === Infinity) return f;
+        if (state.type.includes('mirror')) {
+            if (Math.abs(u - f) < 0.1) return Infinity;
+            return (f * u) / (u - f);
+        } else {
+            if (Math.abs(u + f) < 0.1) return Infinity;
+            return (f * u) / (f + u);
+        }
+    }
+
+    function s(val) { return val * state.scale; }
+
+    function drawGrid(cx, cy) {
+        if (!settings.grid) return;
+        ctx.strokeStyle = COL_GRID; ctx.lineWidth = 1; ctx.beginPath();
+        const step = s(10);
+        if (step < 5) return;
+        for(let x = 0; x <= cx; x+=step) { ctx.moveTo(x, -cy); ctx.lineTo(x, cy); ctx.moveTo(-x, -cy); ctx.lineTo(-x, cy); }
+        for(let y = 0; y <= cy; y+=step) { ctx.moveTo(-cx, y); ctx.lineTo(cx, y); ctx.moveTo(-cx, -y); ctx.lineTo(cx, -y); }
+        ctx.stroke();
+    }
+
+    function drawDimensionLine(x1, x2, yOffsetPx, label) {
+        if (!settings.dims || !isFinite(x1) || !isFinite(x2)) return;
+        const y = yOffsetPx; 
+        const px1 = s(x1); const px2 = s(x2);
+        const mid = (px1 + px2) / 2;
+        ctx.strokeStyle = COL_DIM; ctx.fillStyle = COL_DIM; ctx.lineWidth = 1; ctx.font = "11px Arial";
+        ctx.beginPath(); ctx.moveTo(px1, y); ctx.lineTo(px2, y); ctx.stroke();
+        ctx.beginPath(); ctx.moveTo(px1, y-3); ctx.lineTo(px1, y+3); ctx.moveTo(px2, y-3); ctx.lineTo(px2, y+3); ctx.stroke();
+        const textW = ctx.measureText(label).width;
+        ctx.fillStyle = "rgba(255,255,255,0.8)"; ctx.fillRect(mid - textW/2 - 2, y - 8, textW + 4, 16);
+        ctx.fillStyle = COL_DIM; ctx.fillText(label, mid - textW/2, y + 4);
+    }
+
+    function getBoundaryPoint(x1, y1, slope, isGoingRight) {
+        const w = (canvas.width/2) / state.scale;
+        const h = (canvas.height/2) / state.scale;
+        let tx = isGoingRight ? w : -w;
+        let ty = y1 + slope * (tx - x1);
+        if (ty > h) { ty = h; tx = x1 + (ty - y1) / slope; }
+        else if (ty < -h) { ty = -h; tx = x1 + (ty - y1) / slope; }
+        return { x: tx, y: ty };
+    }
+
+    function arrowHead(px, py, angle, color) {
+        const size = 8; ctx.save(); ctx.translate(px, py); ctx.rotate(angle);
+        ctx.fillStyle = color; ctx.beginPath(); ctx.moveTo(0, 0); ctx.lineTo(-size, -size/2); ctx.lineTo(-size, size/2); ctx.fill(); ctx.restore();
+    }
+
+    function drawRay(x1, y1, x2, y2, color, dashed, withArrow) {
+        const px1 = s(x1); const py1 = s(y1); const px2 = s(x2); const py2 = s(y2);
+        ctx.beginPath(); ctx.strokeStyle = color; ctx.lineWidth = 2;
+        if (dashed) ctx.setLineDash([6, 4]); else ctx.setLineDash([]);
+        ctx.moveTo(px1, py1); ctx.lineTo(px2, py2); ctx.stroke(); ctx.setLineDash([]);
+        if (withArrow && !dashed && Math.hypot(px2-px1, py2-py1) > 30) {
+            arrowHead((px1+px2)/2, (py1+py2)/2, Math.atan2(py2-py1, px2-px1), color);
+        }
+    }
+
+    function drawObjectOrImage(x, h, color, label) {
+        if (!isFinite(x)) return;
+        const px = s(x); const ph = s(h);
+        ctx.beginPath(); ctx.strokeStyle = color; ctx.lineWidth = 3;
+        ctx.moveTo(px, 0); ctx.lineTo(px, -ph); ctx.stroke();
+        ctx.fillStyle = color; ctx.save(); ctx.translate(px, -ph);
+        const angle = -Math.PI / 2 * Math.sign(h);
+        if(h < 0) ctx.rotate(Math.PI); 
+        ctx.beginPath(); ctx.moveTo(0, 0); ctx.lineTo(-6, 12); ctx.lineTo(6, 12); ctx.fill(); ctx.restore();
+        if (Math.abs(ph) > 10) {
+            const text = label; ctx.font = "bold 12px Arial"; const tw = ctx.measureText(text).width;
+            ctx.fillStyle = "rgba(255,255,255,0.7)"; ctx.fillRect(px - tw/2 - 2, -ph - (h>0?20:-8), tw + 4, 14);
+            ctx.fillStyle = color; ctx.fillText(text, px - tw/2, -ph - (h>0?10:-10));
+        }
+    }
+
+function drawOpticElement(f_mag) {
+        const h_pix = Math.min(canvas.height * 0.4, s(f_mag * 1.5)); 
+        const h = Math.max(h_pix, 60); 
+        const R_pix = s(f_mag * 2); 
+        
+        ctx.strokeStyle = "#2c3e50"; 
+        ctx.fillStyle = "rgba(44, 62, 80, 0.1)"; 
+        ctx.lineWidth = 3; 
+
+        // Helper to draw hatching on the non-reflective (right) side
+        // calcX: function that returns the X coordinate of the curve for a given Y
+        const drawHatching = (calcX) => {
+            ctx.save();
+            ctx.strokeStyle = "#7f8c8d"; // Grey for hatching
+            ctx.lineWidth = 1;
+            const density = 10; // Space between lines
+            for (let y = -h; y <= h; y += density) {
+                // Calculate exact X on the mirror curve
+                const x = calcX(y);
+                if (isNaN(x)) continue;
+                ctx.beginPath();
+                ctx.moveTo(x, y);
+                // Draw diagonal dash to the right
+                ctx.lineTo(x + 6, y + 6);
+                ctx.stroke();
+            }
+            ctx.restore();
+        };
+
+        ctx.beginPath();
+
+        if (state.type === 'concave_mirror') {
+            // CONCAVE: Center at -R (Left). Pole at 0. Shape: )
+            // Reflective side is inside (Left). Hatching is outside (Right).
+            
+            const angle = Math.asin(Math.min(0.9, h/R_pix)); 
+            
+            // Draw Arc centered at -R
+            ctx.arc(-R_pix, 0, R_pix, -angle, angle); 
+            ctx.stroke();
+
+            // Hatching logic: Circle eq: (x - cx)^2 + y^2 = R^2
+            // Center cx = -R. We want right side of circle: x = cx + sqrt(R^2 - y^2)
+            drawHatching((y) => {
+                return -R_pix + Math.sqrt(R_pix*R_pix - y*y);
+            });
+
+            // Vertical line for Pole reference (optional, light)
+            ctx.beginPath(); ctx.strokeStyle="rgba(0,0,0,0.1)"; ctx.moveTo(0, -h); ctx.lineTo(0, h); ctx.stroke();
+
+        } else if (state.type === 'convex_mirror') {
+            // CONVEX: Center at +R (Right). Pole at 0. Shape: (
+            // Reflective side is outside (Left). Hatching is inside (Right).
+
+            const angle = Math.asin(Math.min(0.9, h/R_pix)); 
+            
+            // Draw Arc centered at +R. We need the Left side of the circle.
+            // Angles are around PI (180 deg)
+            ctx.arc(R_pix, 0, R_pix, Math.PI - angle, Math.PI + angle); 
+            ctx.stroke();
+
+            // Hatching logic: Center cx = +R. We want left side of circle: x = cx - sqrt(R^2 - y^2)
+            drawHatching((y) => {
+                return R_pix - Math.sqrt(R_pix*R_pix - y*y);
+            });
+
+            ctx.beginPath(); ctx.strokeStyle="rgba(0,0,0,0.1)"; ctx.moveTo(0, -h); ctx.lineTo(0, h); ctx.stroke();
+
+        } else if (state.type === 'convex_lens') {
+            ctx.ellipse(0, 0, 10, h, 0, 0, Math.PI*2); 
+            ctx.fill(); ctx.stroke();
+            ctx.beginPath(); ctx.moveTo(0, -h); ctx.lineTo(0, h); ctx.stroke();
+
+        } else if (state.type === 'concave_lens') {
+            const w = 10;
+            ctx.moveTo(-w, -h); 
+            ctx.quadraticCurveTo(0, 0, -w, h); 
+            ctx.lineTo(w, h); 
+            ctx.quadraticCurveTo(0, 0, w, -h); 
+            ctx.closePath(); 
+            ctx.fill(); ctx.stroke();
+            ctx.beginPath(); ctx.moveTo(0, -h); ctx.lineTo(0, h); ctx.stroke();
+        }
+    }
+
+    function drawPoints(f_mag) {
+        const type = state.type;
+        const dot = (x_phys, l) => { 
+            const px = s(x_phys); ctx.fillStyle="#27ae60"; ctx.beginPath(); ctx.arc(px,0,4,0,Math.PI*2); ctx.fill(); 
+            ctx.fillStyle=COL_TEXT; ctx.font="12px Arial"; ctx.fillText(l, px-5, 20); 
+        };
+        ctx.fillStyle="#333"; ctx.beginPath(); ctx.arc(0,0,3,0,Math.PI*2); ctx.fill(); ctx.fillText(type.includes('lens')?"O":"P", 5, 15);
+        if (type.includes('lens')) { dot(f_mag,"F2"); dot(f_mag*2,"2F2"); dot(-f_mag,"F1"); dot(-f_mag*2,"2F1"); }
+        else if (type === 'concave_mirror') { dot(-f_mag,"F"); dot(-f_mag*2,"C"); }
+        else { dot(f_mag,"F"); dot(f_mag*2,"C"); }
+    }
+
+    function drawInfinityCase(f_signed) {
+        const rayYs = [-state.h, 0, state.h];
+        rayYs.forEach(y => {
+            if (y === 0) return;
+            // Draw ray from left screen edge
+            const startX = -(canvas.width / 2) / state.scale; 
+            drawRay(startX, y, 0, y, COL_INCIDENT, false, true); 
+            
+            let slope, p;
+            if (state.type.includes('mirror')) {
+                slope = (0 - y) / (f_signed - 0);
+                if (state.type === 'concave_mirror') {
+                    p = getBoundaryPoint(0, y, slope, false); drawRay(0, y, p.x, p.y, COL_REFLECTED, false, true);
+                } else {
+                    p = getBoundaryPoint(0, y, slope, true); drawRay(0, y, p.x, p.y, COL_VIRTUAL, true, false); 
+                    p = getBoundaryPoint(0, y, slope, false); drawRay(0, y, p.x, p.y, COL_REFLECTED, false, true); 
+                }
+            } else {
+                slope = (0 - y) / (f_signed - 0);
+                if (state.type === 'convex_lens') {
+                    p = getBoundaryPoint(0, y, slope, true); drawRay(0, y, p.x, p.y, COL_REFLECTED, false, true);
+                } else {
+                    p = getBoundaryPoint(0, y, slope, false); drawRay(0, y, p.x, p.y, COL_VIRTUAL, true, false);
+                    p = getBoundaryPoint(0, y, slope, true); drawRay(0, y, p.x, p.y, COL_REFLECTED, false, true);
+                }
+            }
+        });
+        const pImg = s(f_signed);
+        ctx.fillStyle = COL_IMG; ctx.beginPath(); ctx.arc(pImg, 0, 6, 0, Math.PI*2); ctx.fill();
+        ctx.font = "bold 14px Arial"; ctx.fillText("Image at F", pImg - 30, 25);
+    }
+
+    function drawStandardCase(u, h, f_signed) {
+        drawObjectOrImage(u, h, COL_OBJ, "Object");
+        let v = calculateV(u, f_signed);
+        state.lastV = v;
+        const dimY1 = 30; const dimY2 = 50; const dimY3 = 70;
+        drawDimensionLine(0, u, dimY1, `u = ${u.toFixed(1)}`);
+        drawDimensionLine(0, f_signed, dimY2, `f = ${f_signed.toFixed(1)}`);
+        if (isFinite(v)) drawDimensionLine(0, v, dimY3, `v = ${v.toFixed(1)}`);
+
+        if (!isFinite(v)) { 
+            drawRay(u, -h, 0, -h, COL_INCIDENT, false, true);
+            let slope = (0 - (-h)) / (f_signed - 0);
+            let p;
+             if (state.type === 'concave_mirror') {
+                p = getBoundaryPoint(0, -h, slope, false); drawRay(0, -h, p.x, p.y, COL_REFLECTED, false, true);
+             } else if (state.type === 'convex_lens') {
+                p = getBoundaryPoint(0, -h, slope, true); drawRay(0, -h, p.x, p.y, COL_REFLECTED, false, true);
+             }
+             if(state.type.includes('lens')) {
+                 drawRay(u, -h, 0, 0, COL_INCIDENT, false, true);
+                 let slope2 = -h/u; let p2 = getBoundaryPoint(0, 0, slope2, true); drawRay(0, 0, p2.x, p2.y, COL_REFLECTED, false, true);
+             } else {
+                 drawRay(u, -h, 0, 0, COL_INCIDENT, false, true);
+                 let slope2 = -(-h)/u; let p2 = getBoundaryPoint(0, 0, slope2, false); drawRay(0, 0, p2.x, p2.y, COL_REFLECTED, false, true);
+             }
+             return {v: Infinity, m: Infinity};
+        }
+
+        const m = state.type.includes('mirror') ? -v/u : v/u;
+        const h_img = m * h;
+        drawObjectOrImage(v, h_img, COL_IMG, "Image");
+
+        drawRay(u, -h, 0, -h, COL_INCIDENT, false, true);
+        let slope1 = (0 - (-h)) / (f_signed - 0);
+        if (state.type.includes('mirror')) {
+            if (state.type === 'concave_mirror') {
+                let p = getBoundaryPoint(0, -h, slope1, false); drawRay(0, -h, p.x, p.y, COL_REFLECTED, false, true);
+                if (v > 0) { p = getBoundaryPoint(0, -h, slope1, true); drawRay(0, -h, p.x, p.y, COL_VIRTUAL, true, false); }
+            } else { 
+                let p = getBoundaryPoint(0, -h, slope1, true); drawRay(0, -h, p.x, p.y, COL_VIRTUAL, true, false);
+                p = getBoundaryPoint(0, -h, slope1, false); drawRay(0, -h, p.x, p.y, COL_REFLECTED, false, true);
+            }
+        } else {
+            if (state.type === 'convex_lens') {
+                let p = getBoundaryPoint(0, -h, slope1, true); drawRay(0, -h, p.x, p.y, COL_REFLECTED, false, true);
+                if (v < 0) { p = getBoundaryPoint(0, -h, slope1, false); drawRay(0, -h, p.x, p.y, COL_VIRTUAL, true, false); }
+            } else { 
+                let p = getBoundaryPoint(0, -h, slope1, false); drawRay(0, -h, p.x, p.y, COL_VIRTUAL, true, false);
+                p = getBoundaryPoint(0, -h, slope1, true); drawRay(0, -h, p.x, p.y, COL_REFLECTED, false, true);
+            }
+        }
+        if (state.type.includes('lens')) {
+            drawRay(u, -h, 0, 0, COL_INCIDENT, false, true);
+            let slope2 = (0 - (-h)) / (0 - u);
+            let p2 = getBoundaryPoint(0, 0, slope2, true); drawRay(0, 0, p2.x, p2.y, COL_REFLECTED, false, true);
+            if (v < 0) { p2 = getBoundaryPoint(0, 0, slope2, false); drawRay(0, 0, p2.x, p2.y, COL_VIRTUAL, true, false); }
+        } else { 
+            drawRay(u, -h, 0, 0, COL_INCIDENT, false, true);
+            let slopeRef = -((-h)/u);
+            let p2 = getBoundaryPoint(0, 0, slopeRef, false); drawRay(0, 0, p2.x, p2.y, COL_REFLECTED, false, true);
+            if (state.type === 'convex_mirror' || v > 0) { p2 = getBoundaryPoint(0, 0, slopeRef, true); drawRay(0, 0, p2.x, p2.y, COL_VIRTUAL, true, false); }
+        }
+        return {v, m};
+    }
+
+    function draw() {
+        if(canvas.width !== canvas.parentElement.clientWidth || canvas.height !== canvas.parentElement.clientHeight){
+            canvas.width = canvas.parentElement.clientWidth; canvas.height = canvas.parentElement.clientHeight;
+        }
+        state.scale = parseFloat(document.getElementById('zoomSlider').value);
+        const W = canvas.width, H = canvas.height, cx = W / 2, cy = H / 2;
+        ctx.clearRect(0, 0, W, H); ctx.save(); ctx.translate(cx, cy);
+        drawGrid(cx, cy);
+        ctx.beginPath(); ctx.strokeStyle = COL_AXIS; ctx.lineWidth = 1;
+        ctx.moveTo(-cx, 0); ctx.lineTo(cx, 0); ctx.moveTo(0, -cy); ctx.lineTo(0, cy); ctx.stroke();
+        ctx.font = "bold 14px Arial"; ctx.fillStyle = "#333";
+        ctx.fillText("-x", -cx + 10, -10); ctx.fillText("+x", cx - 30, -10);
+        const f_signed = getSignedF();
+        drawOpticElement(Math.abs(state.f));
+        drawPoints(Math.abs(state.f));
+        if (state.isInfinity) {
+            drawInfinityCase(f_signed);
+            updateCalcDisplay(f_signed, Infinity, f_signed);
+        } else {
+            const u_signed = -Math.abs(state.u);
+            const res = drawStandardCase(u_signed, state.h, f_signed);
+            updateCalcDisplay(f_signed, u_signed, res.v);
+        }
+        ctx.restore();
+    }
+
+    function updateCalcDisplay(f, u, v) {
+        document.getElementById('txt-u').innerText = state.isInfinity ? "∞" : Math.abs(state.u);
+        document.getElementById('txt-f').innerText = Math.abs(state.f);
+        document.getElementById('txt-h').innerText = state.h;
+
+        const content = document.getElementById('calc-content');
+        let html = "";
+        
+        const isMirror = state.type.includes('mirror');
+        const solveTarget = state.solveTarget; 
+
+        // 1. Given
+        html += `<div class="calc-step"><span class="calc-label">1. Given:</span><div class="calc-math">`;
+        if (solveTarget === 'u') {
+            html += `Image-distance, v = ${v.toFixed(1)} cm<br>`;
+            html += `Focal length, f = ${f > 0 ? '+' : ''}${f.toFixed(1)} cm<br>`;
+            // Only show h if it's explicitly part of the problem (via state.h_defined)
+            if (state.h_defined) html += `Object-size, h = +${state.h.toFixed(1)} cm`;
+        } else {
+            html += `Object-distance, u = ${state.isInfinity ? '-∞' : u.toFixed(1)} cm<br>`;
+            html += `Focal length, f = ${f > 0 ? '+' : ''}${f.toFixed(1)} cm<br>`;
+            if (state.h_defined) html += `Object-size, h = +${state.h.toFixed(1)} cm`;
+        }
+        html += `</div></div>`;
+
+        // 2. To Find
+        html += `<div class="calc-step"><span class="calc-label">2. To Find:</span><div class="calc-math">`;
+        if (solveTarget === 'u') {
+            html += `Object-distance, u = ?<br>Magnification, m = ?`;
+        } else {
+            html += `Image-distance, v = ?<br>Magnification, m = ?`;
+            if (state.h_defined) html += `<br>Image-size, h' = ?`;
+        }
+        html += `</div></div>`;
+
+        // 3. Formula
+        html += `<div class="calc-step"><span class="calc-label">3. Formula & Calculation:</span><div class="calc-math">`;
+        
+        if (isMirror) {
+            html += `1/v + 1/u = 1/f &nbsp;&nbsp;(Mirror Formula)<br>`;
+            if (solveTarget === 'u') {
+                html += `1/u = 1/f - 1/v<br>`;
+                html += `1/u = 1/(${f}) - 1/(${v})<br>`;
+                html += `u = ${u.toFixed(1)} cm`;
+            } else {
+                html += `1/v = 1/f - 1/u<br>`;
+                if (state.isInfinity) {
+                    html += `1/v = 1/${f} - 0<br>v = ${f.toFixed(1)} cm`;
+                } else {
+                    html += `1/v = 1/(${f}) - 1/(${u})<br>`;
+                    if (!isFinite(v)) html += `v = ∞`; else html += `v = ${v.toFixed(1)} cm`;
+                }
+            }
+        } else {
+            html += `1/v - 1/u = 1/f &nbsp;&nbsp;(Lens Formula)<br>`;
+            if (solveTarget === 'u') {
+                html += `1/u = 1/v - 1/f<br>`;
+                html += `1/u = 1/(${v}) - 1/(${f})<br>`;
+                html += `u = ${u.toFixed(1)} cm`;
+            } else {
+                html += `1/v = 1/f + 1/u<br>`;
+                if (state.isInfinity) {
+                    html += `1/v = 1/${f} + 0<br>v = ${f.toFixed(1)} cm`;
+                } else {
+                    html += `1/v = 1/(${f}) + 1/(${u})<br>`;
+                    if (!isFinite(v)) html += `v = ∞`; else html += `v = ${v.toFixed(1)} cm`;
+                }
+            }
+        }
+        html += `</div></div>`;
+
+        // 4. Magnification & Height
+        if (isFinite(v) && isFinite(u)) {
+            const m = isMirror ? -v/u : v/u;
+            
+            html += `<div class="calc-step"><span class="calc-label">4. Nature & Size:</span><div class="calc-math">`;
+            html += `m = ${isMirror ? '-v/u' : 'v/u'} = ${m.toFixed(2)}<br>`;
+            
+            if (state.h_defined) {
+                const h_prime = m * state.h;
+                html += `h' = m × h = ${m.toFixed(2)} × ${state.h} = ${h_prime.toFixed(1)} cm<br>`;
+            } else {
+                html += `(Image is ${Math.abs(m)>1?'Magnified':'Diminished'} by factor ${Math.abs(m).toFixed(2)})<br>`;
+            }
+            
+            const nature = (isMirror ? (v<0?"Real":"Virtual") : (v>0?"Real":"Virtual")) + ", " + (m<0?"Inverted":"Erect");
+            html += `Nature: ${nature}`;
+            html += `</div></div>`;
+            
+            let posText = "";
+            if (isMirror) posText = v < 0 ? `${Math.abs(v).toFixed(1)} cm in front of mirror` : `${v.toFixed(1)} cm behind mirror`;
+            else posText = v > 0 ? `${v.toFixed(1)} cm on other side` : `${Math.abs(v).toFixed(1)} cm on same side`;
+
+            html += `<div class="calc-result-final"><strong>Result:</strong><br>`;
+            html += `Image is formed at ${posText}.<br>`;
+            html += `Nature: ${nature}.<br>`;
+            
+            if (state.h_defined) {
+                const h_prime = m * state.h;
+                html += `Size: ${Math.abs(h_prime).toFixed(1)} cm.</div>`;
+            } else {
+                html += `Size: ${Math.abs(m)>1?'Enlarged':'Diminished'}.</div>`;
+            }
+        } else {
+            html += `<div class="calc-result-final"><strong>Result:</strong> Image is formed at Infinity.</div>`;
+        }
+
+        content.innerHTML = html;
+    }
+
+    // --- SETUP ---
+    const pList = document.getElementById('problemList');
+    PROBLEMS.forEach((p, idx) => {
+        const li = document.createElement('li');
+        li.className = 'problem-item';
+        li.innerHTML = `<span class="prob-title">${p.id}: ${p.title}</span><span class="prob-desc">${p.desc}</span>`;
+        li.onclick = () => loadProblem(idx);
+        pList.appendChild(li);
+    });
+
+    function loadProblem(idx) {
+        const p = PROBLEMS[idx];
+        document.getElementById('opticType').value = p.type;
+        state.isInfinity = false;
+        state.f = p.f; state.u = -p.u;
+        state.solveTarget = p.solveFor || 'v'; 
+        
+        // Handle explicit null h
+        if (p.h === null && !p.h_temp) {
+            state.h = 40; // Default placeholder for drawing
+            state.h_defined = false; // Don't show in calc
+        } else if (p.h_temp) {
+            state.h = p.h_temp || 80; // Default placeholder for drawing
+            state.h_defined = false; // Don't show in calc
+        }
+        else {
+            state.h = p.h;
+            state.h_defined = true;
+        }
+        
+        document.getElementById('inp-f').value = p.f;
+        document.getElementById('inp-u').value = p.u;
+        document.getElementById('inp-h').value = state.h;
+        if (p.scale) {
+            state.scale = p.scale;
+            document.getElementById('zoomSlider').value = p.scale;
+        }
+        document.querySelectorAll('.problem-item').forEach(el => el.classList.remove('active'));
+        pList.children[idx].classList.add('active');
+        document.getElementById('calc-title').innerText = `${p.id} Solution`;
+        handleInput();
+    }
+
+    function updateTableVisibility() {
+        document.querySelectorAll('.ref-table').forEach(t => t.style.display = 'none');
+        document.getElementById('tbl-'+state.type.replace('_','-')).style.display = 'table';
+    }
+
+    function handleInput() {
+        state.type = document.getElementById('opticType').value;
+        if (!state.isInfinity) state.u = -parseFloat(document.getElementById('inp-u').value);
+        state.f = parseFloat(document.getElementById('inp-f').value);
+        state.h = parseFloat(document.getElementById('inp-h').value);
+        updateTableVisibility();
+        draw();
+    }
+
+    document.getElementById('inp-u').addEventListener('input', () => { state.isInfinity = false; state.solveTarget = 'v'; handleInput(); });
+    document.getElementById('inp-f').addEventListener('input', () => { state.solveTarget = 'v'; handleInput(); });
+    // Manually dragging h implies h is now defined
+    document.getElementById('inp-h').addEventListener('input', () => { state.h_defined = true; state.solveTarget = 'v'; handleInput(); });
+    document.getElementById('opticType').addEventListener('change', () => { state.isInfinity = false; state.solveTarget = 'v'; handleInput(); });
+
+    window.setPreset = function(uVal, fVal, hVal, scaleVal=2) {
+        state.f = fVal; document.getElementById('inp-f').value = fVal;
+        state.solveTarget = 'v';
+        state.h_defined = true; // Presets assume h is relevant
+        state.h = hVal || 40; document.getElementById('inp-h').value = hVal;
+        state.scale = 2; document.getElementById('zoomSlider').value = scaleVal;
+        if (uVal === 'Infinity') {
+            state.isInfinity = true; state.u = -600; document.getElementById('inp-u').value = 600; 
+        } else {
+            state.isInfinity = false; state.u = -uVal; document.getElementById('inp-u').value = uVal;
+        }
+        document.getElementById('calc-title').innerText = "Solution";
+        handleInput();
+    };
+    
+    document.getElementById('checkGrid').addEventListener('change', e => { settings.grid = e.target.checked; draw(); });
+    document.getElementById('checkDims').addEventListener('change', e => { settings.dims = e.target.checked; draw(); });
+    document.getElementById('zoomSlider').addEventListener('input', draw); 
+
+    canvas.addEventListener('mousedown', e => {
+        state.solveTarget = 'v';
+        const rect = canvas.getBoundingClientRect();
+        const mx = (e.clientX - rect.left - canvas.width/2)/state.scale; 
+        const my = (e.clientY - rect.top - canvas.height/2)/state.scale; 
+        if (state.isInfinity) return;
+        const tol = 20 / state.scale; 
+        const f_coord = getSignedF();
+        if (Math.abs(my) < tol && Math.abs(mx - f_coord) < tol) { interaction.draggingFocus = true; return; }
+        if (state.lastV !== null && isFinite(state.lastV) && Math.abs(mx - state.lastV) < tol) { interaction.draggingImg = true; return; }
+        if (Math.abs(mx - state.u) < tol) { if(Math.abs(my - (-state.h)) < tol) interaction.draggingHead = true; else interaction.draggingObj = true; }
+    });
+
+    canvas.addEventListener('mousemove', e => {
+        if (!interaction.draggingObj && !interaction.draggingHead && !interaction.draggingImg && !interaction.draggingFocus) return;
+        state.isInfinity = false; 
+        const mx = (e.clientX - canvas.getBoundingClientRect().left - canvas.width/2) / state.scale; 
+        const my = (e.clientY - canvas.getBoundingClientRect().top - canvas.height/2) / state.scale;
+        if (interaction.draggingFocus) {
+            let newF = Math.abs(mx);
+            if (newF < 10) newF = 10;
+            if (newF > 300) newF = 300;
+            newF = Math.round(newF * 10) / 10;
+            const isNeg = state.type === 'concave_mirror' || state.type === 'concave_lens';
+            if ((isNeg && mx < 0) || (!isNeg && mx > 0)) { state.f = newF; document.getElementById('inp-f').value = newF; handleInput(); }
+        } else if (interaction.draggingImg) {
+            const f = getSignedF(); const v = mx;
+            if (Math.abs(v - f) > 5) {
+                let newU;
+                if (state.type.includes('mirror')) newU = (f * v) / (v - f);
+                else newU = (f * v) / (f - v);
+                newU = Math.round(newU * 10) / 10;
+                if (newU < -5 && newU > -600) { state.u = newU; document.getElementById('inp-u').value = Math.abs(newU); }
+            }
+        } else if (interaction.draggingObj) {
+            let newU = Math.min(-10, mx); newU = Math.round(newU * 10) / 10; state.u = newU; document.getElementById('inp-u').value = Math.abs(newU);
+        } else if (interaction.draggingHead) {
+            let newH = Math.abs(my); if(newH < 5) newH = 5; newH = Math.round(newH * 10) / 10; state.h = newH; document.getElementById('inp-h').value = newH;
+            state.h_defined = true; // Dragging height defines it
+        }
+        handleInput();
+    });
+
+    window.addEventListener('mouseup', () => { interaction.draggingObj = false; interaction.draggingHead = false; interaction.draggingImg = false; interaction.draggingFocus = false; });
+    window.addEventListener('resize', draw);
+
+    // Init
+    handleInput();
+
+</script>
+</body>
+</html>
