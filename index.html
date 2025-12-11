@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>CBSE Class 10 Light</title>
     <style>
         :root {
@@ -11,6 +11,8 @@
             --bg: #f4f6f9;
             --panel-bg: #ffffff;
         }
+
+        * { box-sizing: border-box; }
 
         body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
@@ -22,6 +24,7 @@
             overflow: hidden;
         }
 
+        /* --- Header is inside left panel as per your design --- */
         header {
             background-color: #6001d2;
             color: white;
@@ -32,11 +35,27 @@
             font-weight: 600;
         }
 
+        /* --- Mobile Only Top Bar --- */
+        .mobile-top-bar {
+            display: none; /* Hidden on desktop */
+            background-color: #6001d2;
+            color: white;
+            padding: 10px 15px;
+            align-items: center;
+            justify-content: space-between;
+            font-weight: bold;
+            z-index: 50;
+        }
+        .hamburger-btn {
+            background: none; border: none; color: white; font-size: 1.5rem; cursor: pointer; padding: 0;
+        }
+
         /* --- Main Layout --- */
         .main-container {
             display: flex;
             flex: 1;
             overflow: hidden;
+            position: relative;
         }
 
         /* --- LEFT PANEL --- */
@@ -50,6 +69,20 @@
             overflow-y: auto;
             box-shadow: 2px 0 5px rgba(0,0,0,0.05);
             z-index: 10;
+            transition: transform 0.3s ease; /* For mobile slide animation */
+        }
+
+        /* Close Button for Mobile Panel */
+        .panel-close-btn {
+            display: none; 
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            background: transparent;
+            border: none;
+            color: white;
+            font-size: 1.5rem;
+            cursor: pointer;
         }
 
         .section-header {
@@ -94,6 +127,7 @@
             flex-direction: column;
             position: relative;
             background: white;
+            width: 100%;
         }
 
         .canvas-container {
@@ -101,8 +135,9 @@
             position: relative;
             overflow: hidden;
             cursor: crosshair;
+            min-height: 300px; /* Ensure visibility on mobile */
         }
-        canvas { display: block; width: 100%; height: 100%; }
+        canvas { display: block; width: 100%; height: 100%; touch-action: none; /* Important for touch drag */ }
 
         .legend-overlay {
             position: absolute; top: 10px; right: 10px;
@@ -119,6 +154,7 @@
             border-top: 1px solid #ccc;
             display: flex;
             flex-direction: column;
+            flex-shrink: 0;
         }
 
         .dashboard-header {
@@ -130,6 +166,7 @@
             align-items: center;
             font-size: 0.8rem;
             color: var(--secondary);
+            flex-wrap: wrap;
         }
         .dashboard-header label { display: flex; align-items: center; gap: 5px; margin: 0; cursor: pointer; font-weight: normal;}
         
@@ -182,34 +219,73 @@
         .prob-title { font-weight: bold; color: #2c3e50; font-size: 0.9rem; }
         .prob-desc { color: #555; font-size: 0.8rem; line-height: 1.3; }
 
+        /* Overlay for Mobile Menu */
+        .panel-overlay {
+            display: none;
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.5);
+            z-index: 25;
+        }
+
+        /* --- MEDIA QUERIES FOR MOBILE --- */
+        @media (max-width: 768px) {
+            .mobile-top-bar { display: flex; }
+            
+            .left-panel {
+                position: fixed;
+                top: 0; left: 0;
+                height: 100%;
+                width: 85%; /* Menu width */
+                max-width: 320px;
+                transform: translateX(-100%); /* Hidden by default */
+                z-index: 100;
+            }
+            .left-panel.open { transform: translateX(0); }
+            
+            .panel-close-btn { display: block; }
+            .panel-overlay.active { display: block; }
+
+            .dashboard-content { flex-direction: column; }
+            .calc-pane { flex: 1; border-right: none; border-bottom: 1px solid #eee; font-size: 0.85rem; }
+            .problems-pane { flex: 1; height: 50%; }
+            
+            .zoom-control { margin-left: 0; }
+            .dashboard-header { gap: 10px; justify-content: space-between; }
+        }
+
     </style>
 </head>
 <body>
 
+<!-- Mobile Header & Overlay -->
+<div class="panel-overlay" id="panelOverlay"></div>
+<div class="mobile-top-bar">
+    <button class="hamburger-btn" id="menuBtn">☰</button>
+    <span>Class 10 Optics Lab</span>
+    <span style="width:24px"></span> <!-- Spacer to center title -->
+</div>
 
 <div class="main-container">
     
     <!-- LEFT PANEL -->
-    <div class="left-panel">
+    <div class="left-panel" id="leftPanel">
+        <button class="panel-close-btn" id="closePanelBtn">×</button>
+
+        <header>
+            CBSE Class 10 Light
+        </header>
         
-<header>
-    CBSE Class 10 Light
-</header>
         <div class="section-header" style="margin-top:10px">Variables</div>
         <div class="info-box info-grid">
-
             <span><b>u</b>: Object Distance</span>
             <span><b>v</b>: Image Distance</span>
             <span><b>f</b>: focal length</span>
             <span><b>m</b>: Magnification</span>
             <span><b>P</b>: Power</span>
-            
-            
-            
-                        <span><b>P/O</b>: Pole / Optic Center</span>
+            <span><b>P/O</b>: Pole / Optic Center</span>
             <span><b>F/F1/F2</b>: Principal Focus</span>
             <span><b>R</b>: Radius (2f)</span>
-
             <span><b>C/2F/2F1/2F2</b>: Center of Curvature</span>
         </div>
 
@@ -218,8 +294,7 @@
             <div class="formula-item">Mirror: 1/v + 1/u = 1/f</div>
             <div class="formula-item">Lens:&nbsp;&nbsp; 1/v - 1/u = 1/f</div>
             <div class="formula-item">Mag (m): -v/u (Mir), v/u (Len)</div>
-                        <div class="formula-item">Power (P): 1/f</div>
-
+            <div class="formula-item">Power (P): 1/f</div>
         </div>
 
         <div class="section-header">Controls</div>
@@ -250,6 +325,7 @@
 
         <div class="section-header">Reference Table</div>
         <div class="ref-table-container">
+            <!-- Tables (Exact content preserved) -->
             <table id="tbl-concave-mirror" class="ref-table theme-concave-mirror">
                 <thead><tr><th>Position of Object</th><th>Position of Image</th><th>Size & Nature</th></tr></thead>
                 <tbody>
@@ -434,7 +510,7 @@
         u: -100,    
         f: 100,     
         h: 40,
-        h_defined: true, // New flag: is height relevant?
+        h_defined: true,
         isInfinity: false,
         scale: 2.0, 
         lastV: null,
@@ -442,6 +518,42 @@
     };
     let settings = { grid: true, dims: true };
     let interaction = { draggingObj: false, draggingHead: false, draggingImg: false, draggingFocus: false };
+
+    // --- MOBILE MENU ---
+    const menuBtn = document.getElementById('menuBtn');
+    const closeBtn = document.getElementById('closePanelBtn');
+    const leftPanel = document.getElementById('leftPanel');
+    const overlay = document.getElementById('panelOverlay');
+
+    function toggleMenu() {
+        leftPanel.classList.toggle('open');
+        overlay.classList.toggle('active');
+    }
+    menuBtn.addEventListener('click', toggleMenu);
+    closeBtn.addEventListener('click', toggleMenu);
+    overlay.addEventListener('click', toggleMenu);
+
+    // --- TOUCH HANDLER ---
+    function touchHandler(event) {
+        if (event.target !== canvas) return;
+        var touches = event.changedTouches, first = touches[0], type = "";
+        switch(event.type) {
+            case "touchstart": type = "mousedown"; break;
+            case "touchmove":  type = "mousemove"; break;
+            case "touchend":   type = "mouseup";   break;
+            default: return;
+        }
+        var simulatedEvent = document.createEvent("MouseEvent");
+        simulatedEvent.initMouseEvent(type, true, true, window, 1,
+            first.screenX, first.screenY, first.clientX, first.clientY, false,
+            false, false, false, 0, null);
+        first.target.dispatchEvent(simulatedEvent);
+        event.preventDefault();
+    }
+    canvas.addEventListener("touchstart", touchHandler, true);
+    canvas.addEventListener("touchmove", touchHandler, true);
+    canvas.addEventListener("touchend", touchHandler, true);
+    canvas.addEventListener("touchcancel", touchHandler, true);
 
     function getSignedF() {
         const val = Math.abs(state.f);
@@ -526,87 +638,35 @@
         }
     }
 
-function drawOpticElement(f_mag) {
+    function drawOpticElement(f_mag) {
         const h_pix = Math.min(canvas.height * 0.4, s(f_mag * 1.5)); 
         const h = Math.max(h_pix, 60); 
         const R_pix = s(f_mag * 2); 
-        
-        ctx.strokeStyle = "#2c3e50"; 
-        ctx.fillStyle = "rgba(44, 62, 80, 0.1)"; 
-        ctx.lineWidth = 3; 
-
-        // Helper to draw hatching on the non-reflective (right) side
-        // calcX: function that returns the X coordinate of the curve for a given Y
+        ctx.strokeStyle = "#2c3e50"; ctx.fillStyle = "rgba(44, 62, 80, 0.1)"; ctx.lineWidth = 3; 
         const drawHatching = (calcX) => {
-            ctx.save();
-            ctx.strokeStyle = "#7f8c8d"; // Grey for hatching
-            ctx.lineWidth = 1;
-            const density = 10; // Space between lines
+            ctx.save(); ctx.strokeStyle = "#7f8c8d"; ctx.lineWidth = 1; const density = 10;
             for (let y = -h; y <= h; y += density) {
-                // Calculate exact X on the mirror curve
-                const x = calcX(y);
-                if (isNaN(x)) continue;
-                ctx.beginPath();
-                ctx.moveTo(x, y);
-                // Draw diagonal dash to the right
-                ctx.lineTo(x + 6, y + 6);
-                ctx.stroke();
+                const x = calcX(y); if (isNaN(x)) continue;
+                ctx.beginPath(); ctx.moveTo(x, y); ctx.lineTo(x + 6, y + 6); ctx.stroke();
             }
             ctx.restore();
         };
-
         ctx.beginPath();
-
         if (state.type === 'concave_mirror') {
-            // CONCAVE: Center at -R (Left). Pole at 0. Shape: )
-            // Reflective side is inside (Left). Hatching is outside (Right).
-            
             const angle = Math.asin(Math.min(0.9, h/R_pix)); 
-            
-            // Draw Arc centered at -R
-            ctx.arc(-R_pix, 0, R_pix, -angle, angle); 
-            ctx.stroke();
-
-            // Hatching logic: Circle eq: (x - cx)^2 + y^2 = R^2
-            // Center cx = -R. We want right side of circle: x = cx + sqrt(R^2 - y^2)
-            drawHatching((y) => {
-                return -R_pix + Math.sqrt(R_pix*R_pix - y*y);
-            });
-
-            // Vertical line for Pole reference (optional, light)
+            ctx.arc(-R_pix, 0, R_pix, -angle, angle); ctx.stroke();
+            drawHatching((y) => { return -R_pix + Math.sqrt(R_pix*R_pix - y*y); });
             ctx.beginPath(); ctx.strokeStyle="rgba(0,0,0,0.1)"; ctx.moveTo(0, -h); ctx.lineTo(0, h); ctx.stroke();
-
         } else if (state.type === 'convex_mirror') {
-            // CONVEX: Center at +R (Right). Pole at 0. Shape: (
-            // Reflective side is outside (Left). Hatching is inside (Right).
-
-            const angle = Math.asin(Math.min(0.9, h/R_pix)); 
-            
-            // Draw Arc centered at +R. We need the Left side of the circle.
-            // Angles are around PI (180 deg)
-            ctx.arc(R_pix, 0, R_pix, Math.PI - angle, Math.PI + angle); 
-            ctx.stroke();
-
-            // Hatching logic: Center cx = +R. We want left side of circle: x = cx - sqrt(R^2 - y^2)
-            drawHatching((y) => {
-                return R_pix - Math.sqrt(R_pix*R_pix - y*y);
-            });
-
+            const angle = Math.asin(Math.min(0.9, h/R_pix));
+            ctx.arc(R_pix, 0, R_pix, Math.PI - angle, Math.PI + angle); ctx.stroke();
+            drawHatching((y) => { return R_pix - Math.sqrt(R_pix*R_pix - y*y); });
             ctx.beginPath(); ctx.strokeStyle="rgba(0,0,0,0.1)"; ctx.moveTo(0, -h); ctx.lineTo(0, h); ctx.stroke();
-
         } else if (state.type === 'convex_lens') {
-            ctx.ellipse(0, 0, 10, h, 0, 0, Math.PI*2); 
-            ctx.fill(); ctx.stroke();
-            ctx.beginPath(); ctx.moveTo(0, -h); ctx.lineTo(0, h); ctx.stroke();
-
+            ctx.ellipse(0, 0, 10, h, 0, 0, Math.PI*2); ctx.fill(); ctx.stroke(); ctx.beginPath(); ctx.moveTo(0, -h); ctx.lineTo(0, h); ctx.stroke();
         } else if (state.type === 'concave_lens') {
             const w = 10;
-            ctx.moveTo(-w, -h); 
-            ctx.quadraticCurveTo(0, 0, -w, h); 
-            ctx.lineTo(w, h); 
-            ctx.quadraticCurveTo(0, 0, w, -h); 
-            ctx.closePath(); 
-            ctx.fill(); ctx.stroke();
+            ctx.moveTo(-w, -h); ctx.quadraticCurveTo(0, 0, -w, h); ctx.lineTo(w, h); ctx.quadraticCurveTo(0, 0, w, -h); ctx.closePath(); ctx.fill(); ctx.stroke();
             ctx.beginPath(); ctx.moveTo(0, -h); ctx.lineTo(0, h); ctx.stroke();
         }
     }
@@ -627,10 +687,8 @@ function drawOpticElement(f_mag) {
         const rayYs = [-state.h, 0, state.h];
         rayYs.forEach(y => {
             if (y === 0) return;
-            // Draw ray from left screen edge
             const startX = -(canvas.width / 2) / state.scale; 
             drawRay(startX, y, 0, y, COL_INCIDENT, false, true); 
-            
             let slope, p;
             if (state.type.includes('mirror')) {
                 slope = (0 - y) / (f_signed - 0);
@@ -757,12 +815,10 @@ function drawOpticElement(f_mag) {
         const isMirror = state.type.includes('mirror');
         const solveTarget = state.solveTarget; 
 
-        // 1. Given
         html += `<div class="calc-step"><span class="calc-label">1. Given:</span><div class="calc-math">`;
         if (solveTarget === 'u') {
             html += `Image-distance, v = ${v.toFixed(1)} cm<br>`;
             html += `Focal length, f = ${f > 0 ? '+' : ''}${f.toFixed(1)} cm<br>`;
-            // Only show h if it's explicitly part of the problem (via state.h_defined)
             if (state.h_defined) html += `Object-size, h = +${state.h.toFixed(1)} cm`;
         } else {
             html += `Object-distance, u = ${state.isInfinity ? '-∞' : u.toFixed(1)} cm<br>`;
@@ -771,7 +827,6 @@ function drawOpticElement(f_mag) {
         }
         html += `</div></div>`;
 
-        // 2. To Find
         html += `<div class="calc-step"><span class="calc-label">2. To Find:</span><div class="calc-math">`;
         if (solveTarget === 'u') {
             html += `Object-distance, u = ?<br>Magnification, m = ?`;
@@ -781,15 +836,11 @@ function drawOpticElement(f_mag) {
         }
         html += `</div></div>`;
 
-        // 3. Formula
         html += `<div class="calc-step"><span class="calc-label">3. Formula & Calculation:</span><div class="calc-math">`;
-        
         if (isMirror) {
             html += `1/v + 1/u = 1/f &nbsp;&nbsp;(Mirror Formula)<br>`;
             if (solveTarget === 'u') {
-                html += `1/u = 1/f - 1/v<br>`;
-                html += `1/u = 1/(${f}) - 1/(${v})<br>`;
-                html += `u = ${u.toFixed(1)} cm`;
+                html += `1/u = 1/f - 1/v<br>1/u = 1/(${f}) - 1/(${v})<br>u = ${u.toFixed(1)} cm`;
             } else {
                 html += `1/v = 1/f - 1/u<br>`;
                 if (state.isInfinity) {
@@ -802,9 +853,7 @@ function drawOpticElement(f_mag) {
         } else {
             html += `1/v - 1/u = 1/f &nbsp;&nbsp;(Lens Formula)<br>`;
             if (solveTarget === 'u') {
-                html += `1/u = 1/v - 1/f<br>`;
-                html += `1/u = 1/(${v}) - 1/(${f})<br>`;
-                html += `u = ${u.toFixed(1)} cm`;
+                html += `1/u = 1/v - 1/f<br>1/u = 1/(${v}) - 1/(${f})<br>u = ${u.toFixed(1)} cm`;
             } else {
                 html += `1/v = 1/f + 1/u<br>`;
                 if (state.isInfinity) {
@@ -817,10 +866,8 @@ function drawOpticElement(f_mag) {
         }
         html += `</div></div>`;
 
-        // 4. Magnification & Height
         if (isFinite(v) && isFinite(u)) {
             const m = isMirror ? -v/u : v/u;
-            
             html += `<div class="calc-step"><span class="calc-label">4. Nature & Size:</span><div class="calc-math">`;
             html += `m = ${isMirror ? '-v/u' : 'v/u'} = ${m.toFixed(2)}<br>`;
             
@@ -839,10 +886,7 @@ function drawOpticElement(f_mag) {
             if (isMirror) posText = v < 0 ? `${Math.abs(v).toFixed(1)} cm in front of mirror` : `${v.toFixed(1)} cm behind mirror`;
             else posText = v > 0 ? `${v.toFixed(1)} cm on other side` : `${Math.abs(v).toFixed(1)} cm on same side`;
 
-            html += `<div class="calc-result-final"><strong>Result:</strong><br>`;
-            html += `Image is formed at ${posText}.<br>`;
-            html += `Nature: ${nature}.<br>`;
-            
+            html += `<div class="calc-result-final"><strong>Result:</strong><br>Image is formed at ${posText}.<br>Nature: ${nature}.<br>`;
             if (state.h_defined) {
                 const h_prime = m * state.h;
                 html += `Size: ${Math.abs(h_prime).toFixed(1)} cm.</div>`;
@@ -852,11 +896,9 @@ function drawOpticElement(f_mag) {
         } else {
             html += `<div class="calc-result-final"><strong>Result:</strong> Image is formed at Infinity.</div>`;
         }
-
         content.innerHTML = html;
     }
 
-    // --- SETUP ---
     const pList = document.getElementById('problemList');
     PROBLEMS.forEach((p, idx) => {
         const li = document.createElement('li');
@@ -873,17 +915,12 @@ function drawOpticElement(f_mag) {
         state.f = p.f; state.u = -p.u;
         state.solveTarget = p.solveFor || 'v'; 
         
-        // Handle explicit null h
         if (p.h === null && !p.h_temp) {
-            state.h = 40; // Default placeholder for drawing
-            state.h_defined = false; // Don't show in calc
+            state.h = 40; state.h_defined = false;
         } else if (p.h_temp) {
-            state.h = p.h_temp || 80; // Default placeholder for drawing
-            state.h_defined = false; // Don't show in calc
-        }
-        else {
-            state.h = p.h;
-            state.h_defined = true;
+            state.h = p.h_temp || 80; state.h_defined = false;
+        } else {
+            state.h = p.h; state.h_defined = true;
         }
         
         document.getElementById('inp-f').value = p.f;
@@ -915,14 +952,13 @@ function drawOpticElement(f_mag) {
 
     document.getElementById('inp-u').addEventListener('input', () => { state.isInfinity = false; state.solveTarget = 'v'; handleInput(); });
     document.getElementById('inp-f').addEventListener('input', () => { state.solveTarget = 'v'; handleInput(); });
-    // Manually dragging h implies h is now defined
     document.getElementById('inp-h').addEventListener('input', () => { state.h_defined = true; state.solveTarget = 'v'; handleInput(); });
     document.getElementById('opticType').addEventListener('change', () => { state.isInfinity = false; state.solveTarget = 'v'; handleInput(); });
 
     window.setPreset = function(uVal, fVal, hVal, scaleVal=2) {
         state.f = fVal; document.getElementById('inp-f').value = fVal;
         state.solveTarget = 'v';
-        state.h_defined = true; // Presets assume h is relevant
+        state.h_defined = true; 
         state.h = hVal || 40; document.getElementById('inp-h').value = hVal;
         state.scale = 2; document.getElementById('zoomSlider').value = scaleVal;
         if (uVal === 'Infinity') {
@@ -976,7 +1012,7 @@ function drawOpticElement(f_mag) {
             let newU = Math.min(-10, mx); newU = Math.round(newU * 10) / 10; state.u = newU; document.getElementById('inp-u').value = Math.abs(newU);
         } else if (interaction.draggingHead) {
             let newH = Math.abs(my); if(newH < 5) newH = 5; newH = Math.round(newH * 10) / 10; state.h = newH; document.getElementById('inp-h').value = newH;
-            state.h_defined = true; // Dragging height defines it
+            state.h_defined = true; 
         }
         handleInput();
     });
